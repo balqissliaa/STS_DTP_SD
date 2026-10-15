@@ -1,29 +1,44 @@
 <?php
 require_once "koneksi.php";
 
-    try {
-        $sql = "SELECT 
-                kategori_fasilitas.nama_kategori,
-                laporan_kerusakan.nama_pelapor,
-                laporan_kerusakan.nama_fasilitas,
-                laporan_kerusakan.lokasi,
-                laporan_kerusakan.deskripsi,
-                laporan_kerusakan.prioritas,
-                laporan_kerusakan.status,
-                laporan_kerusakan.tanggal_laporan
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $nama = $_POST["nama_pelapor"];
+    $fasilitas = $_POST["nama_fasilitas"];
+    $lokasi = $_POST["lokasi"];
+    $kategori = $_POST["id_kategori"];
+    $deskripsi = $_POST["deskripsi"];
+    $prioritas = $_POST["prioritas"];
+
+    $sql = "INSERT INTO laporan_kerusakan
+            (nama_pelapor, nama_fasilitas, lokasi, id_kategori,
+             deskripsi, prioritas, status)
+            VALUES (?, ?, ?, ?, ?, ?, 'Menunggu')";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([
+        $nama, $fasilitas, $lokasi,
+        $kategori, $deskripsi, $prioritas
+    ]);
+
+    header("Location: " . $_SERVER["PHP_SELF"]);
+    exit;
+}
+$sql = "SELECT
+            kategori_fasilitas.nama_kategori,
+            laporan_kerusakan.nama_pelapor,
+            laporan_kerusakan.nama_fasilitas,
+            laporan_kerusakan.lokasi,
+            laporan_kerusakan.deskripsi,
+            laporan_kerusakan.prioritas,
+            laporan_kerusakan.status,
+            laporan_kerusakan.tanggal_laporan
         FROM kategori_fasilitas
         INNER JOIN laporan_kerusakan
-        ON kategori_fasilitas.id_kategori = laporan_kerusakan.id_kategori";
+        ON kategori_fasilitas.id_kategori =
+           laporan_kerusakan.id_kategori";
 
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch(PDOException $e) {
-    echo "Error: " . $e->getMessage();
-    }
-
-    $stmt = null;
-    $conn = null;
+$stmt = $conn->prepare($sql);
+$stmt->execute();
+$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -108,7 +123,6 @@ require_once "koneksi.php";
                         Kirim Laporan</button></p>
                 </fieldset>
             </form>
-            <p><small>Catatan: tombol Kirim Laporan belum menyimpan apa pun. Fitur Create merupakan tantangan bonus.</small></p>
         </section>
 
         <section id="daftar-laporan" aria-labelledby="judul-daftar">
@@ -150,7 +164,7 @@ require_once "koneksi.php";
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7">Belum ada data laporan.</td>
+                            <td colspan="7" class="text-center">Belum ada data laporan.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
